@@ -31,7 +31,7 @@
 
 .client-name-1 {
     left: 1550px;
-    top: calc(-17%);
+    top: calc(-14%);
     position: absolute;
     z-index: 91;
     text-shadow: 10px 1px 0 rgba(0, 0, 0, 0.4);
@@ -39,24 +39,24 @@
     text-transform: uppercase;
     font-weight: 700;
     letter-spacing: 1.4px;
-    font-size: 200px;
+    font-size: 145px;
 }
 
 .client-name-2 {
-    left: 1540px;
-    top: calc(12%);
+    left: 1500px;
+    top: calc(8%);
     position: absolute;
     z-index: 14;
     text-shadow: 5px 1px 0 rgba(0, 0, 0, 0.4);
     color: rgb(255, 255, 255);
     text-transform: uppercase;
     font-weight: 300;
-    font-size: 95px;
+    font-size: 75px;
 }
 
 .what-is-this {
     left: 20px;
-    top: 75px;
+    top: 30px;
     position: absolute;
     z-index: 91;
     text-shadow: 2px 1px 0 rgba(0, 0, 0, 0.4);
@@ -69,7 +69,7 @@
 
 .command-1 {
     left: 75px;
-    top: 140px;
+    top: 110px;
     position: absolute;
     z-index: 91;
     text-shadow: 2px 1px 0 rgba(0, 0, 0, 0.4);
@@ -82,7 +82,7 @@
 
 .command-2 {
     left: 75px;
-    top: 190px;
+    top: 160px;
     position: absolute;
     z-index: 91;
     text-shadow: 2px 1px 0 rgba(0, 0, 0, 0.4);
@@ -95,7 +95,7 @@
 
 .command-3 {
     left: 75px;
-    top: 240px;
+    top: 210px;
     position: absolute;
     z-index: 91;
     text-shadow: 2px 1px 0 rgba(0, 0, 0, 0.4);
@@ -108,7 +108,7 @@
 
 .command-4 {
     left: 75px;
-    top: 290px;
+    top: 260px;
     position: absolute;
     z-index: 91;
     text-shadow: 2px 1px 0 rgba(0, 0, 0, 0.4);
