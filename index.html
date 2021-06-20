@@ -1,25 +1,267 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="UTF-8">
-		<title>portlathree's landing page</title>
-		<link href="https://fonts.googleapis.com/css?family=Raleway:300,400,700|Roboto" rel="stylesheet">
-		<link href="style.css" rel="stylesheet">
+		<meta charset="utf-8">
+		<title>three.js</title>
+		<style>
+			body {
+				margin: 0;
+			}
+			
+			canvas{
+				display: block;
+			}
+
+			.absolute{
+				position: absolute;
+			}
+		</style>
+		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
-		<div class="body">
-			<!-- Background --> 
-			<div class="bg2">
-				<img draggable="false">
-			</div>
 
-			<p class="client-name-1">PORTAL</p>
-      <p class="client-name-2">THREE</p>
-      
-      <p class="what-is-this">⬤ What are all the commands for Pog Alliance ?</p> 
-      <p class="command-1">⬤ !help - Display this page !</p> 
-      <p class="command-2">⬤ !tip - Display the poggop server list where you can vote for poggop !</p> 
-      <p class="command-3">⬤ !discord - Our discord :eyes: ! (Perfect for suggesions) </p> 
-      <p class="command-4">⬤ !test - Hello, World !</p> 
+		<script src="js/three.js"></script>
+		<script type="module" src="js/GLTFLoader.js"></script>
+
+		<div id="base">
+			<div class="absolute">
+				<h1>[portalthree]</h1>
+			</div>
+		</div>
+
+		<script type="module">
+			import {GLTFLoader} from "./js/GLTFLoader.js";
+			import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+			import Stats from './js/stats.module.js';
+			import { HorizontalBlurShader } from './js/HorizontalBlurShader.js';
+			import { VerticalBlurShader } from './js/VerticalBlurShader.js';
+
+			let camera, scene, renderer, stats;
+
+			const meshes = [];
+
+			const PLANE_WIDTH = 2.5;
+			const PLANE_HEIGHT = 2.5;
+			const CAMERA_HEIGHT = 2.5;
+
+			const state = {
+				shadow: {
+					blur: 8,
+					darkness: 3.5,
+					opacity: 1,
+				},
+				plane: {
+					color: '#ffd83d',
+					opacity: 1,
+				},
+				showWireframe: false,
+			};
+
+			let shadowGroup, renderTarget, renderTargetBlur, shadowCamera, cameraHelper, depthMaterial, horizontalBlurMaterial, verticalBlurMaterial;
+
+			let plane, blurPlane, fillPlane;
+
+			function init() {
+				const loader = new GLTFLoader();
+
+				camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 100);
+				camera.position.set(-5, 1, 4);
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0xffd83d);
+
+				stats = new Stats();
+				document.body.appendChild(stats.dom);
+
+				var obj;
+				loader.load("./minecraft_axolotl/untitled.gltf", function(gltf){
+					obj = gltf.scene;
+					obj.position.y -= 0.5;
+					scene.add(gltf.scene)
+				});
+				var light = new THREE.HemisphereLight(0xffffff, 0x000000, 5)
+				scene.add(light)
+
+				const geometries = [
+					//new THREE.BoxGeometry( 0.4, 0.4, 0.4 ),
+					//new THREE.IcosahedronGeometry( 0.3 ),
+				];
+
+				const material = new THREE.MeshNormalMaterial();
+
+				for (let i = 0, l = geometries.length; i < l; i ++) {
+
+					const angle = (i / l) * Math.PI * 2;
+
+					const geometry = geometries[i];
+					const mesh = new THREE.Mesh(geometry, material);
+					mesh.position.y = 0.1;
+					mesh.position.x = Math.cos(angle) / 2.0;
+					mesh.position.z = Math.sin(angle) / 2.0;
+					scene.add(mesh);
+					meshes.push(mesh);
+
+				}
+
+				shadowGroup = new THREE.Group();
+				shadowGroup.position.y = - 0.3;
+				scene.add( shadowGroup );
+
+				renderTarget = new THREE.WebGLRenderTarget( 512, 512 );
+				renderTarget.texture.generateMipmaps = false;
+
+				renderTargetBlur = new THREE.WebGLRenderTarget( 512, 512 );
+				renderTargetBlur.texture.generateMipmaps = false;
+
+
+				const planeGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ).rotateX( Math.PI / 2 );
+				const planeMaterial = new THREE.MeshBasicMaterial( {
+					map: renderTarget.texture,
+					opacity: state.shadow.opacity,
+					transparent: true,
+					depthWrite: false,
+				} );
+				plane = new THREE.Mesh( planeGeometry, planeMaterial );
+
+				plane.renderOrder = 1;
+				shadowGroup.add(plane);
+
+				plane.scale.y = - 1;
+
+				// the plane onto which to blur the texture
+				blurPlane = new THREE.Mesh( planeGeometry );
+				blurPlane.visible = false;
+				shadowGroup.add( blurPlane );
+
+				// the plane with the color of the ground
+				const fillPlaneMaterial = new THREE.MeshBasicMaterial( {
+					color: state.plane.color,
+					opacity: state.plane.opacity,
+					transparent: true,
+					depthWrite: false,
+				} );
+				fillPlane = new THREE.Mesh( planeGeometry, fillPlaneMaterial );
+				fillPlane.rotateX( Math.PI );
+				shadowGroup.add( fillPlane );
+
+				// the camera to render the depth material from
+				shadowCamera = new THREE.OrthographicCamera( - PLANE_WIDTH / 2, PLANE_WIDTH / 2, PLANE_HEIGHT / 2, - PLANE_HEIGHT / 2, 0, CAMERA_HEIGHT );
+				shadowCamera.rotation.x = Math.PI / 2; // get the camera to look up
+				shadowGroup.add( shadowCamera );
+
+				cameraHelper = new THREE.CameraHelper( shadowCamera );
+
+				// like MeshDepthMaterial, but goes from black to transparent
+				depthMaterial = new THREE.MeshDepthMaterial();
+				depthMaterial.userData.darkness = { value: state.shadow.darkness };
+				depthMaterial.onBeforeCompile = function ( shader ) {
+
+					shader.uniforms.darkness = depthMaterial.userData.darkness;
+					shader.fragmentShader = /* glsl */`
+						uniform float darkness;
+						${shader.fragmentShader.replace(
+					'gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );',
+					'gl_FragColor = vec4( vec3( 0.0 ), ( 1.0 - fragCoordZ ) * darkness );'
+				)}
+					`;
+
+				};
+
+				depthMaterial.depthTest = false;
+				depthMaterial.depthWrite = false;
+
+				horizontalBlurMaterial = new THREE.ShaderMaterial( HorizontalBlurShader );
+				horizontalBlurMaterial.depthTest = false;
+
+				verticalBlurMaterial = new THREE.ShaderMaterial( VerticalBlurShader );
+				verticalBlurMaterial.depthTest = false;
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.maxPolarAngle = Math.PI * 0.48;
+				controls.enablePan = false;
+
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function blurShadow(amount) {
+
+				blurPlane.visible = true;
+
+				// blur horizontally and draw in the renderTargetBlur
+				blurPlane.material = horizontalBlurMaterial;
+				blurPlane.material.uniforms.tDiffuse.value = renderTarget.texture;
+				horizontalBlurMaterial.uniforms.h.value = amount * 1 / 256;
+
+				renderer.setRenderTarget( renderTargetBlur );
+				renderer.render( blurPlane, shadowCamera );
+
+				// blur vertically and draw in the main renderTarget
+				blurPlane.material = verticalBlurMaterial;
+				blurPlane.material.uniforms.tDiffuse.value = renderTargetBlur.texture;
+				verticalBlurMaterial.uniforms.v.value = amount * 1 / 256;
+
+				renderer.setRenderTarget( renderTarget );
+				renderer.render( blurPlane, shadowCamera );
+
+				blurPlane.visible = false;
+
+			}
+
+			function animate(){
+				requestAnimationFrame(animate);
+
+				meshes.forEach(mesh => {
+
+					mesh.rotation.x += 0.01;
+					mesh.rotation.y += 0.02;
+
+				});
+
+				const initialBackground = scene.background;
+				scene.background = null;
+
+				// force the depthMaterial to everything
+				cameraHelper.visible = false;
+				scene.overrideMaterial = depthMaterial;
+
+				// render to the render target to get the depths
+				renderer.setRenderTarget(renderTarget);
+				renderer.render(scene, shadowCamera);
+
+				// and reset the override material
+				scene.overrideMaterial = null;
+				cameraHelper.visible = true;
+
+				blurShadow(state.shadow.blur);
+
+				// a second pass to reduce the artifacts
+				// (0.4 is the minimum blur amout so that the artifacts are gone)
+				blurShadow(state.shadow.blur * 0.4);
+
+				// reset and render the normal scene
+				renderer.setRenderTarget(null);
+				scene.background = initialBackground;
+
+				renderer.render(scene, camera);
+				stats.update();
+			}
+
+			init();
+			animate();
+		</script>
 	</body>
 </html>
