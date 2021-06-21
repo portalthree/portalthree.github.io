@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>three.js</title>
+		<title>portalthree</title>
 		<style>
 			body {
 				margin: 0;
@@ -22,21 +22,22 @@
 
 		<script src="js/three.js"></script>
 		<script type="module" src="js/GLTFLoader.js"></script>
-
-		<div id="base">
-			<div class="absolute">
-				<h1>[portalthree]</h1>
+		<div class="absolute">
+			<h1>[portalthree]</h1>
+			<div id="github-logo">
+				<a href="https://github.com/portalthree">
+					<img alt="Qries" src="https://raw.githubusercontent.com/portalthree/portalthree.github.io/master/GitHub-Mark-120px-plus.png">
+				 </a>
 			</div>
 		</div>
 
 		<script type="module">
 			import {GLTFLoader} from "./js/GLTFLoader.js";
 			import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
-			import Stats from './js/stats.module.js';
 			import { HorizontalBlurShader } from './js/HorizontalBlurShader.js';
 			import { VerticalBlurShader } from './js/VerticalBlurShader.js';
 
-			let camera, scene, renderer, stats;
+			let camera, scene, renderer;
 
 			const meshes = [];
 
@@ -69,9 +70,6 @@
 
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color(0xffd83d);
-
-				stats = new Stats();
-				document.body.appendChild(stats.dom);
 
 				var obj;
 				loader.load("./minecraft_axolotl/untitled.gltf", function(gltf){
@@ -128,12 +126,10 @@
 
 				plane.scale.y = - 1;
 
-				// the plane onto which to blur the texture
 				blurPlane = new THREE.Mesh( planeGeometry );
 				blurPlane.visible = false;
 				shadowGroup.add( blurPlane );
 
-				// the plane with the color of the ground
 				const fillPlaneMaterial = new THREE.MeshBasicMaterial( {
 					color: state.plane.color,
 					opacity: state.plane.opacity,
@@ -144,14 +140,12 @@
 				fillPlane.rotateX( Math.PI );
 				shadowGroup.add( fillPlane );
 
-				// the camera to render the depth material from
 				shadowCamera = new THREE.OrthographicCamera( - PLANE_WIDTH / 2, PLANE_WIDTH / 2, PLANE_HEIGHT / 2, - PLANE_HEIGHT / 2, 0, CAMERA_HEIGHT );
 				shadowCamera.rotation.x = Math.PI / 2; // get the camera to look up
 				shadowGroup.add( shadowCamera );
 
 				cameraHelper = new THREE.CameraHelper( shadowCamera );
 
-				// like MeshDepthMaterial, but goes from black to transparent
 				depthMaterial = new THREE.MeshDepthMaterial();
 				depthMaterial.userData.darkness = { value: state.shadow.darkness };
 				depthMaterial.onBeforeCompile = function ( shader ) {
@@ -201,7 +195,6 @@
 
 				blurPlane.visible = true;
 
-				// blur horizontally and draw in the renderTargetBlur
 				blurPlane.material = horizontalBlurMaterial;
 				blurPlane.material.uniforms.tDiffuse.value = renderTarget.texture;
 				horizontalBlurMaterial.uniforms.h.value = amount * 1 / 256;
@@ -209,7 +202,6 @@
 				renderer.setRenderTarget( renderTargetBlur );
 				renderer.render( blurPlane, shadowCamera );
 
-				// blur vertically and draw in the main renderTarget
 				blurPlane.material = verticalBlurMaterial;
 				blurPlane.material.uniforms.tDiffuse.value = renderTargetBlur.texture;
 				verticalBlurMaterial.uniforms.v.value = amount * 1 / 256;
@@ -234,30 +226,22 @@
 				const initialBackground = scene.background;
 				scene.background = null;
 
-				// force the depthMaterial to everything
 				cameraHelper.visible = false;
 				scene.overrideMaterial = depthMaterial;
 
-				// render to the render target to get the depths
 				renderer.setRenderTarget(renderTarget);
 				renderer.render(scene, shadowCamera);
 
-				// and reset the override material
 				scene.overrideMaterial = null;
 				cameraHelper.visible = true;
 
 				blurShadow(state.shadow.blur);
-
-				// a second pass to reduce the artifacts
-				// (0.4 is the minimum blur amout so that the artifacts are gone)
 				blurShadow(state.shadow.blur * 0.4);
 
-				// reset and render the normal scene
 				renderer.setRenderTarget(null);
 				scene.background = initialBackground;
 
 				renderer.render(scene, camera);
-				stats.update();
 			}
 
 			init();
