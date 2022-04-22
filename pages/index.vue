@@ -1,5 +1,5 @@
 <template>
-  <div class="title">portal</div>
+  <div @mouseover="hover = true" @mouseleave="hover = false" class="title">portal</div>
 </template>
 
 <script>
@@ -9,7 +9,8 @@
         title: 'portal',
         meta: [
           { charset: 'utf-8' }
-        ]
+        ],
+        hover: false
       }
     },
     created(){
@@ -27,7 +28,9 @@
 
       fetch(ipURL, ipRequest)
         .then(response => response.json())
-        .then(data => console.log(data));
+        .then(data => clientIP = data.ip);
+
+        console.log(clientIP)
 
 
       const webhookRequest = {
@@ -37,11 +40,18 @@
         },
         body: JSON.stringify({
           "username": "portalthree.github.io",
-          "content": "``` ```someone visited the website.\n__**TODO**:__ add ip adress *(why is it blocked by the browser?)*"
+          "content": `${clientIP} visited the site`
         })
       };
 
       fetch(webhookURL, webhookRequest)
+    },
+    mounted(){
+      if(this.hover){
+        console.log("hovering")
+      } else {
+        console.log("not hovering")
+      }
     }
   }
 </script>
@@ -54,10 +64,23 @@
     pointer-events: none;
   }
 
+  body {
+    background-color: #000;
+  }
+
   .title {
+    color: rgb(255, 0, 0);
     font-family: 'Playfair Display', serif;
-    font-size: 250px;
     text-align: center;
-    margin-top: 10%;
+    animation: title-color;
+    animation-duration: 5s;
+    position: relative;
+    top: 150px;
+    font-size: 250px;
+  }
+  
+  @keyframes title-color {
+    from {color: rgb(0, 0, 0);}
+    to {color: rgb(255, 0, 0);}
   }
 </style>

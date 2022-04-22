@@ -25,6 +25,8 @@ export default {
 
     let cursorColor = this.cursorColor
 
+    let cursorSpeed = 85;
+
     document.addEventListener("mousemove", event => {
         cursorX = event.clientX;
         cursorY = event.clientY;
@@ -35,12 +37,18 @@ export default {
     document.addEventListener("mousedown", event => {
         cursorX = event.clientX
         cursorY = event.clientY;
+        cursorWidth = 18;
+        cursorHeight = 18;
+        cursorSpeed = 200;
         updateCursor();
     });
 
     document.addEventListener("mouseup", event => {
         cursorX = event.clientX
         cursorY = event.clientY;
+        cursorWidth = 20;
+        cursorHeight = 20;
+        cursorSpeed = 85;
         updateCursor();
     }); 
 
@@ -49,7 +57,8 @@ export default {
         transform: translate3d(${cursorX}px, ${cursorY}px, 0);
         width: ${cursorWidth}px;
         height: ${cursorHeight}px;
-        background-color: ${cursorColor}`;
+        background-color: ${cursorColor};
+        transition: transform ${cursorSpeed}ms ease-out;`;
     }
   },
 };
@@ -71,9 +80,4 @@ export default {
         pointer-events: none;
     }
 
-    .vueCursor {
-        background-color: #aaa;
-        transition: transform 85ms;
-    }
-    
 </style>
