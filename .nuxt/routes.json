@@ -1,0 +1,16 @@
+[
+  {
+    "name": "about",
+    "path": "/about",
+    "component": "/home/local/dev/portalthree.github.io/pages/about.vue",
+    "chunkName": "pages/about",
+    "_name": "_39b0b90b"
+  },
+  {
+    "name": "index",
+    "path": "/",
+    "component": "/home/local/dev/portalthree.github.io/pages/index.vue",
+    "chunkName": "pages/index",
+    "_name": "_596893d0"
+  }
+]
