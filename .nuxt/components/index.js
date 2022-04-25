@@ -1,3 +1,4 @@
+export { default as SelectionCursor } from '../../components/SelectionCursor.vue'
 export { default as VueCursor } from '../../components/VueCursor.vue'
 
 // nuxt/nuxt.js#8607

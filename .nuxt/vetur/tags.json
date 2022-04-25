@@ -1,4 +1,7 @@
 {
+  "SelectionCursor": {
+    "description": "Auto imported from components/SelectionCursor.vue"
+  },
   "VueCursor": {
     "description": "Auto imported from components/VueCursor.vue"
   }
